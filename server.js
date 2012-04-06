@@ -4,8 +4,10 @@
  */
 
 var express = require('express')
-  , routes = require('./routes')
-  , eco    = require('eco');
+  , eco    = require('eco')
+  , fs = require('fs')
+  , coffee = require('coffee-script');
+
 
 var app = module.exports = express.createServer();
 
@@ -30,7 +32,19 @@ app.configure('production', function(){
 
 // Routes
 
-app.get('/', routes.index);
+
+// Development route for compiling and serving app client code.
+app.get('/js/:app/client.js', function(req, res) {
+  res.header('Content-Type', 'application/x-javascript')
+  dir = req.params.app
+  path = "./apps/" + dir + "/client.coffee"
+  raw = fs.readFileSync(path, "ascii")
+  res.write(coffee.compile(raw));
+  res.end()
+});
+
+
+require('./apps/bugs/routes')(app);
 
 app.listen(3000, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
